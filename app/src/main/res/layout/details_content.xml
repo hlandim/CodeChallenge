@@ -50,6 +50,30 @@
             android:src="@drawable/close_movie_details"
             app:backdropImageUrl="@{viewModel.movie.backdropPath}" />
 
+        <TextView
+            android:id="@+id/tvGenres"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/imgPoster"
+            android:text="@{viewModel.getGenresString}"
+            android:textSize="15sp" />
+
+        <TextView
+            android:id="@+id/tvOverView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tvGenres"
+            android:text="@{viewModel.movie.overview}"
+            android:textSize="15sp" />
+
+        <TextView
+            android:id="@+id/tvReleaseDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tvOverView"
+            android:text="@{viewModel.movie.releaseDate}"
+            android:textSize="15sp" />
+
         <!--   <ImageView
                android:id="@+id/imgPoster"
                android:layout_width="wrap_content"
