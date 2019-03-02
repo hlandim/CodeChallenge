@@ -13,7 +13,7 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 
 
-class MovieViewModel(application: Application) : AndroidViewModel(application), LifecycleObserver {
+class MoviesViewModel(application: Application) : AndroidViewModel(application), LifecycleObserver {
 
     private val compositeDisposable = CompositeDisposable()
 
