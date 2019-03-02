@@ -1,9 +1,7 @@
 package com.arctouch.codechallenge.viewmodel
 
-import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
 import android.util.Log
-import com.arctouch.codechallenge.model.Genre
 import com.arctouch.codechallenge.model.GenreResponse
 import com.arctouch.codechallenge.web.api.ApiService
 import com.arctouch.codechallenge.web.api.MovieRepository
@@ -16,7 +14,6 @@ import io.reactivex.schedulers.Schedulers
 class GenreViewModel : ViewModel() {
 
     private val compositeDisposable = CompositeDisposable()
-    val genres: MutableLiveData<List<Genre>> = MutableLiveData()
 
     companion object {
         private val movieService = MovieService(ApiService().tmdbApiService)
@@ -31,7 +28,6 @@ class GenreViewModel : ViewModel() {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
                     Log.d("TESTE", "2")
-                    genres.value = it.genres
                 }
 
         compositeDisposable.add(dispose)
@@ -40,6 +36,7 @@ class GenreViewModel : ViewModel() {
     }
 
     override fun onCleared() {
+        Log.d("TESTE", "onCleared")
         compositeDisposable.dispose()
         super.onCleared()
     }

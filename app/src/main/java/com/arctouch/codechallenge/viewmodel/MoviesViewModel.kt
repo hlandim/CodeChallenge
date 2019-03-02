@@ -1,6 +1,5 @@
 package com.arctouch.codechallenge.viewmodel
 
-import android.app.Application
 import android.arch.lifecycle.*
 import com.arctouch.codechallenge.model.Movie
 import com.arctouch.codechallenge.model.UpcomingMoviesResponse
@@ -13,7 +12,7 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 
 
-class MoviesViewModel(application: Application) : AndroidViewModel(application), LifecycleObserver {
+class MoviesViewModel : ViewModel(), LifecycleObserver {
 
     private val compositeDisposable = CompositeDisposable()
 

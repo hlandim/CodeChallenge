@@ -1,12 +1,14 @@
 package com.arctouch.codechallenge.view.details
 
+import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.arctouch.codechallenge.R
+import com.arctouch.codechallenge.databinding.MovieDetailsFragmentBinding
 import com.arctouch.codechallenge.model.Movie
+import com.arctouch.codechallenge.viewmodel.MovieDetailsViewModel
 import com.daimajia.androidanimations.library.Techniques
 import com.daimajia.androidanimations.library.YoYo
 import kotlinx.android.synthetic.main.movie_details_fragment.*
@@ -30,7 +32,12 @@ class MovieDetailsFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         movie = arguments?.getSerializable("movie") as Movie
-        return inflater.inflate(R.layout.movie_details_fragment, container, false)
+        val viewModel = ViewModelProviders.of(this).get(MovieDetailsViewModel::class.java)
+        viewModel.movie.value = movie
+
+        val binding = MovieDetailsFragmentBinding.inflate(inflater, container, false)
+        binding.viewModel = viewModel
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
