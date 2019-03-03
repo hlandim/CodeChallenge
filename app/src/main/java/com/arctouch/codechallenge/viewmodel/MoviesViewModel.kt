@@ -1,7 +1,9 @@
 package com.arctouch.codechallenge.viewmodel
 
+import android.app.Application
 import android.arch.lifecycle.*
 import android.util.Log
+import com.arctouch.codechallenge.R
 import com.arctouch.codechallenge.model.Movie
 import com.arctouch.codechallenge.model.UpcomingMoviesResponse
 import com.arctouch.codechallenge.util.Tags
@@ -10,9 +12,12 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
+import retrofit2.HttpException
+import java.io.IOException
+import java.net.UnknownHostException
 
 
-class MoviesViewModel(private val movieRepository: MovieRepository) : ViewModel(), LifecycleObserver {
+class MoviesViewModel(application: Application, private val movieRepository: MovieRepository) : AndroidViewModel(application), LifecycleObserver {
 
     private val compositeDisposable = CompositeDisposable()
 
@@ -22,7 +27,7 @@ class MoviesViewModel(private val movieRepository: MovieRepository) : ViewModel(
     private var countPage: Long = 0
     private var isSearchingMode = false
     private var searchQuery: String? = null
-    val communicationError = MutableLiveData<Throwable>()
+    val communicationError = MutableLiveData<String>()
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
     fun load() {
@@ -34,7 +39,7 @@ class MoviesViewModel(private val movieRepository: MovieRepository) : ViewModel(
                         requestNextMoviePage()
                     }, {
                         Log.w(Tags.COMMUNICATION_ERROR, it.message)
-                        communicationError.value = it
+                        handleCommunicationError(it)
                     })
 
             compositeDisposable.add(dispose)
@@ -42,6 +47,7 @@ class MoviesViewModel(private val movieRepository: MovieRepository) : ViewModel(
     }
 
     fun requestNextPage(): Observable<UpcomingMoviesResponse> {
+
         return if (isSearchingMode && searchQuery != null) {
             requestNextSearchPage()
         } else {
@@ -68,7 +74,7 @@ class MoviesViewModel(private val movieRepository: MovieRepository) : ViewModel(
 
                 }, {
                     Log.w(Tags.COMMUNICATION_ERROR, it.message)
-                    communicationError.value = it
+                    handleCommunicationError(it)
                 })
         compositeDisposable.add(dispose)
 
@@ -98,7 +104,7 @@ class MoviesViewModel(private val movieRepository: MovieRepository) : ViewModel(
 
                 }, {
                     Log.w(Tags.COMMUNICATION_ERROR, it.message)
-                    communicationError.value = it
+                    handleCommunicationError(it)
                 })
         compositeDisposable.add(dispose)
 
@@ -123,6 +129,17 @@ class MoviesViewModel(private val movieRepository: MovieRepository) : ViewModel(
         val allMovies = movies.value!!.plus(moviesWithGenres).toMutableList()
         isEmptySearch.value = allMovies.isEmpty()
         movies.postValue(allMovies)
+    }
+
+    private fun handleCommunicationError(t: Throwable) {
+        val message = when (t.cause) {
+            is UnknownHostException,
+            is IOException -> getApplication<Application>().getString(R.string.network_error)
+            is HttpException -> getApplication<Application>().getString(R.string.invalid_parameters_error)
+            else -> getApplication<Application>().getString(R.string.unknown_error)
+        }
+
+        communicationError.value = message
     }
 
     override fun onCleared() {

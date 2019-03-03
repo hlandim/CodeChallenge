@@ -28,6 +28,9 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.Consumer
 import io.reactivex.plugins.RxJavaPlugins
 import io.reactivex.schedulers.Schedulers
+import retrofit2.HttpException
+import java.io.IOException
+import java.net.UnknownHostException
 
 
 class HomeActivity : AppCompatActivity(), HomeAdapter.ListListener, Consumer<Throwable> {
@@ -131,7 +134,7 @@ class HomeActivity : AppCompatActivity(), HomeAdapter.ListListener, Consumer<Thr
         val movieRepository = MovieRepository(movieService)
 
         val viewModel: MoviesViewModel by lazy {
-            getViewModel { MoviesViewModel(movieRepository) }
+            getViewModel { MoviesViewModel(application, movieRepository) }
         }
 
         viewModel.isLoading.observe(this, Observer { isModelViewLoading ->
@@ -166,8 +169,21 @@ class HomeActivity : AppCompatActivity(), HomeAdapter.ListListener, Consumer<Thr
     }
 
     override fun accept(t: Throwable) {
-        viewModel.communicationError.value = t
-        val finalMessage = getString(R.string.communication_error) + ": " + t.message
+
+
+        val message = when (t.cause) {
+            is UnknownHostException,
+            is IOException -> {
+                getString(R.string.network_error)
+            }
+            is HttpException -> getString(R.string.invalid_parameters_error)
+            else -> {
+                getString(R.string.unknown_error)
+            }
+        }
+
+        viewModel.communicationError.value = message
+        val finalMessage = message + ": " + t.message
         val snackBar = Snackbar.make(binding.rootLayout, finalMessage, Snackbar.LENGTH_LONG)
         snackBar.setActionTextColor(ContextCompat.getColor(this, android.R.color.holo_red_light))
         snackBar.show()

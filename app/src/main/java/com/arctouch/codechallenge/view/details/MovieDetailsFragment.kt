@@ -58,13 +58,17 @@ class MovieDetailsFragment : Fragment() {
     }
 
     fun startCloseAnimation() {
-        YoYo.with(Techniques.SlideOutDown).onEnd {
-            content.visibility = View.INVISIBLE
-            YoYo.with(Techniques.FadeOut).onEnd { animator ->
-                overlay.visibility = View.INVISIBLE
-                onFinishAnimationListener?.call(animator)
-            }.duration(200).playOn(overlay)
-        }.duration(200).playOn(content)
+        if (isAdded && activity != null) {
+            YoYo.with(Techniques.SlideOutDown).onEnd {
+                content.visibility = View.INVISIBLE
+                YoYo.with(Techniques.FadeOut).onEnd { animator ->
+                    overlay.visibility = View.INVISIBLE
+                    onFinishAnimationListener?.call(animator)
+                }.duration(200).playOn(overlay)
+            }.duration(200).playOn(content)
+        } else {
+            onFinishAnimationListener?.call(null)
+        }
     }
 
 }
