@@ -1,36 +1,43 @@
 package com.arctouch.codechallenge.viewmodel
 
 import android.arch.lifecycle.*
+import android.util.Log
 import com.arctouch.codechallenge.model.Movie
 import com.arctouch.codechallenge.model.UpcomingMoviesResponse
-import com.arctouch.codechallenge.web.api.ApiService
+import com.arctouch.codechallenge.util.Tags
 import com.arctouch.codechallenge.web.api.MovieRepository
-import com.arctouch.codechallenge.web.api.MovieService
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 
 
-class MoviesViewModel : ViewModel(), LifecycleObserver {
+class MoviesViewModel(private val movieRepository: MovieRepository) : ViewModel(), LifecycleObserver {
 
     private val compositeDisposable = CompositeDisposable()
 
     val movies: MutableLiveData<MutableList<Movie>> = MutableLiveData<MutableList<Movie>>().apply { value = mutableListOf() }
     val isLoading: MutableLiveData<Boolean> = MutableLiveData<Boolean>().apply { value = false }
     var countPage: Long = 0
+    val communicationErro = MutableLiveData<String>()
 
-    companion object {
-        private val movieService = MovieService(ApiService().tmdbApiService)
-        private val movieRepository = MovieRepository(movieService)
-    }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
     fun load() {
-        isLoading.value = true
-        requestNextMoviePage()
-    }
+        if (movies.value!!.isEmpty()) {
+            isLoading.value = true
+            val dispose = getGenres().subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe({
+                        requestNextMoviePage()
+                    }, {
+                        Log.w(Tags.COMMUNICATION_ERROR, it.message)
+                        communicationErro.value = it.message
+                    })
 
+            compositeDisposable.add(dispose)
+        }
+    }
 
     fun requestNextMoviePage() {
         countPage++
@@ -43,19 +50,27 @@ class MoviesViewModel : ViewModel(), LifecycleObserver {
         val dispose = response
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe {
+                .subscribe({
                     if (isLoading.value!!) {
                         isLoading.value = false
                     }
                     val moviesWithGenres = it.results.map { movie ->
                         movie.copy(genres = MovieRepository.genres.filter { movie.genreIds?.contains(it.id) == true })
                     }
-                    movies.value = moviesWithGenres.toMutableList()
-                }
+                    val allMovies = movies.value!!.plus(moviesWithGenres).toMutableList()
+                    movies.postValue(allMovies)
+
+                }, {
+                    Log.w(Tags.COMMUNICATION_ERROR, it.message)
+                    communicationErro.value = it.message
+                })
         compositeDisposable.add(dispose)
 
         return response
     }
+
+    private fun getGenres() = movieRepository.getGenres()
+
 
     override fun onCleared() {
         movieRepository.dispose()

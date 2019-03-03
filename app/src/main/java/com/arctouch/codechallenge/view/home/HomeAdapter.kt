@@ -72,12 +72,11 @@ class HomeAdapter(private var movies: MutableList<Movie>) : RecyclerView.Adapter
             }
         } else {
             val footerHolder = holder as FooterHolder
-            if (!isLoading && countNewItems != 0) {
+            if (!isLoading && countNewItems > 0) {
                 countNewItems = 0
                 isLoading = true
                 footerHolder.itemView.pbLoadingNewMovies.visibility = View.VISIBLE
-                listener.onBottomReached()
-            } else if (countNewItems == 0) {
+            } else if (countNewItems <= 0) {
                 footerHolder.itemView.pbLoadingNewMovies.visibility = View.GONE
             }
         }
@@ -97,10 +96,10 @@ class HomeAdapter(private var movies: MutableList<Movie>) : RecyclerView.Adapter
 
     }
 
-    fun addItems(movies: MutableList<Movie>) {
+    fun replaceItems(movies: MutableList<Movie>) {
         isLoading = false
-        countNewItems = movies.size
-        this.movies.addAll(movies)
+        countNewItems = movies.size - this.movies.size
+        this.movies = movies
         notifyDataSetChanged()
     }
 }

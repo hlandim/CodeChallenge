@@ -33,6 +33,7 @@ class MovieDetailsFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         movie = arguments?.getSerializable("movie") as Movie
         val viewModel = ViewModelProviders.of(this).get(MovieDetailsViewModel::class.java)
+
         viewModel.movie.value = movie
 
         val binding = MovieDetailsFragmentBinding.inflate(inflater, container, false)

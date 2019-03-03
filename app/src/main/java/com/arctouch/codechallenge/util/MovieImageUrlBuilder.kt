@@ -2,8 +2,8 @@ package com.arctouch.codechallenge.util
 
 import com.arctouch.codechallenge.web.api.TmdbApi
 
-private val POSTER_URL = "https://image.tmdb.org/t/p/w154"
-private val BACKDROP_URL = "https://image.tmdb.org/t/p/w780"
+private const val POSTER_URL = "https://image.tmdb.org/t/p/w154"
+private const val BACKDROP_URL = "https://image.tmdb.org/t/p/w780"
 
 class MovieImageUrlBuilder {
 
@@ -16,8 +16,6 @@ class MovieImageUrlBuilder {
             return BACKDROP_URL + backdropPath + "?api_key=" + TmdbApi.API_KEY
         }
     }
-
-
 
 
 }
