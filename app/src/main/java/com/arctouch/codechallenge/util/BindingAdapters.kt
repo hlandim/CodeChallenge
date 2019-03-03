@@ -11,11 +11,11 @@ import com.arctouch.codechallenge.view.home.HomeAdapter
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 
-@BindingAdapter("items")
-fun setItems(recyclerView: RecyclerView, list: List<Movie>) {
+@BindingAdapter("addItems")
+fun setAddItems(recyclerView: RecyclerView, list: MutableList<Movie>) {
     recyclerView.adapter.let {
         if (it is HomeAdapter) {
-            it.replaceItems(list)
+            it.addItems(list)
         }
     }
 }

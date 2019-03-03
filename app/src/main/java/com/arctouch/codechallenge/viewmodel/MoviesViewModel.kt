@@ -16,8 +16,9 @@ class MoviesViewModel : ViewModel(), LifecycleObserver {
 
     private val compositeDisposable = CompositeDisposable()
 
-    val movies: MutableLiveData<List<Movie>> = MutableLiveData<List<Movie>>().apply { value = emptyList() }
+    val movies: MutableLiveData<MutableList<Movie>> = MutableLiveData<MutableList<Movie>>().apply { value = mutableListOf() }
     val isLoading: MutableLiveData<Boolean> = MutableLiveData<Boolean>().apply { value = false }
+    var countPage: Long = 0
 
     companion object {
         private val movieService = MovieService(ApiService().tmdbApiService)
@@ -26,22 +27,30 @@ class MoviesViewModel : ViewModel(), LifecycleObserver {
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
     fun load() {
-        upcomingMovies(1)
+        isLoading.value = true
+        requestNextMoviePage()
     }
 
 
-    fun upcomingMovies(page: Long): Observable<UpcomingMoviesResponse> {
-        isLoading.value = true
+    fun requestNextMoviePage() {
+        countPage++
+        upcomingMovies(countPage)
+    }
+
+    private fun upcomingMovies(page: Long): Observable<UpcomingMoviesResponse> {
+
         val response = movieRepository.upcomingMovies(page)
         val dispose = response
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
-                    isLoading.value = false
+                    if (isLoading.value!!) {
+                        isLoading.value = false
+                    }
                     val moviesWithGenres = it.results.map { movie ->
                         movie.copy(genres = MovieRepository.genres.filter { movie.genreIds?.contains(it.id) == true })
                     }
-                    movies.value = moviesWithGenres
+                    movies.value = moviesWithGenres.toMutableList()
                 }
         compositeDisposable.add(dispose)
 

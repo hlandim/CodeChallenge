@@ -10,14 +10,29 @@ import com.arctouch.codechallenge.util.MovieImageUrlBuilder
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import kotlinx.android.synthetic.main.movie_item.view.*
+import kotlinx.android.synthetic.main.row_loading.view.*
 
-class HomeAdapter(private var movies: List<Movie>) : RecyclerView.Adapter<HomeAdapter.ViewHolder>() {
 
-    lateinit var listener: RowClickListener
+class HomeAdapter(private var movies: MutableList<Movie>) : RecyclerView.Adapter<HomeAdapter.CustomViewHolder>() {
 
-    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    lateinit var listener: ListListener
+    private var isLoading = false
+    private var countNewItems = movies.size
 
-        fun bind(movie: Movie) {
+    companion object {
+        const val ITEM = 1
+        const val LOADING = 2
+    }
+
+    init {
+    }
+
+    abstract class CustomViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        abstract fun bind(movie: Movie)
+    }
+
+    class ViewHolder(itemView: View) : CustomViewHolder(itemView) {
+        override fun bind(movie: Movie) {
             itemView.titleTextView.text = movie.title
             itemView.genresTextView.text = movie.genres?.joinToString(separator = ", ") { it.name }
             itemView.releaseDateTextView.text = movie.releaseDate
@@ -29,27 +44,63 @@ class HomeAdapter(private var movies: List<Movie>) : RecyclerView.Adapter<HomeAd
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.movie_item, parent, false)
-        return ViewHolder(view)
+    class FooterHolder(itemView: View) : CustomViewHolder(itemView) {
+        override fun bind(movie: Movie) {
+
+        }
+
     }
 
-    override fun getItemCount() = movies.size
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CustomViewHolder {
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val movie = movies[position]
-        holder.bind(movie)
-        holder.itemView.setOnClickListener {
-            listener.onRowClicked(movie)
+        return if (viewType == ITEM) {
+            val view = LayoutInflater.from(parent.context).inflate(com.arctouch.codechallenge.R.layout.movie_item, parent, false)
+            ViewHolder(view)
+        } else {
+            val view = LayoutInflater.from(parent.context).inflate(com.arctouch.codechallenge.R.layout.row_loading, parent, false)
+            FooterHolder(view)
+        }
+
+    }
+
+    override fun onBindViewHolder(holder: CustomViewHolder, position: Int) {
+        if (position < movies.size) {
+            val movie = movies[position]
+            holder.bind(movie)
+            holder.itemView.setOnClickListener {
+                listener.onRowClicked(movie)
+            }
+        } else {
+            val footerHolder = holder as FooterHolder
+            if (!isLoading && countNewItems != 0) {
+                countNewItems = 0
+                isLoading = true
+                footerHolder.itemView.pbLoadingNewMovies.visibility = View.VISIBLE
+                listener.onBottomReached()
+            } else if (countNewItems == 0) {
+                footerHolder.itemView.pbLoadingNewMovies.visibility = View.GONE
+            }
         }
     }
 
-    interface RowClickListener {
-        fun onRowClicked(movie: Movie)
+    override fun getItemCount(): Int {
+        return movies.size + 1
     }
 
-    fun replaceItems(movies: List<Movie>) {
-        this.movies = movies
+    override fun getItemViewType(position: Int): Int {
+        return if (position == movies.size) LOADING else ITEM
+    }
+
+    interface ListListener {
+        fun onRowClicked(movie: Movie)
+        fun onBottomReached()
+
+    }
+
+    fun addItems(movies: MutableList<Movie>) {
+        isLoading = false
+        countNewItems = movies.size
+        this.movies.addAll(movies)
         notifyDataSetChanged()
     }
 }

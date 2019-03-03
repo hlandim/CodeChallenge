@@ -12,7 +12,8 @@ import com.arctouch.codechallenge.viewmodel.MoviesViewModel
 import com.daimajia.androidanimations.library.YoYo
 import io.reactivex.disposables.CompositeDisposable
 
-class HomeActivity : BaseActivity(), HomeAdapter.RowClickListener {
+
+class HomeActivity : BaseActivity(), HomeAdapter.ListListener {
 
     private val compositeDisposable = CompositeDisposable()
     private lateinit var binding: HomeActivityBinding
@@ -28,13 +29,13 @@ class HomeActivity : BaseActivity(), HomeAdapter.RowClickListener {
         binding.lifecycleOwner = this
 
 
-        val adapter = HomeAdapter(emptyList())
+        val adapter = HomeAdapter(emptyList<Movie>().toMutableList())
         adapter.listener = this
         binding.recyclerView.adapter = adapter
-
         val viewModel = ViewModelProviders.of(this).get(MoviesViewModel::class.java)
         this.lifecycle.addObserver(viewModel)
         binding.viewModel = viewModel
+
 
     }
 
@@ -45,6 +46,10 @@ class HomeActivity : BaseActivity(), HomeAdapter.RowClickListener {
         }
         supportFragmentManager.beginTransaction().replace(R.id.fragment_details, detailsFragment, FRAGMENT_TAG).commit()
 
+    }
+
+    override fun onBottomReached() {
+        binding.viewModel!!.requestNextMoviePage()
     }
 
     override fun onBackPressed() {
