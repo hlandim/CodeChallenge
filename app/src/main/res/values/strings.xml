@@ -1,4 +1,16 @@
 <resources>
     <string name="app_name">Code Challenge</string>
     <string name="movie_and_genres">%s - %s</string>
+    <string name="search_title">Archtouch</string>
+    <string name="search_hint">Encontre um filme</string>
+    <string name="communication_error">Falha na comunicação com o servidor</string>
+    <string name="network_error">Verifique sua conexão</string>
+    <string name="unknown_error">Erro desconhecido</string>
+    <string name="invalid_parameters_error">Erro ao enviar a requisição, verifique os parâmetros enviados</string>
+    <string name="empty_response">Nenhum resultado encontrado</string>
+    <string name="released_date">Lançamento:&#160;</string>
+    <string name="poster_image">Poster image</string>
+    <string name="backdrop_image">Backdrop image</string>
+    <string name="connection_off">Sem conexão</string>
+    <string name="connection_on">Estamos de volta</string>
 </resources>

@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+        <variable
+            name="viewModel"
+            type="com.arctouch.codechallenge.viewmodel.MovieDetailsViewModel" />
+
+
+    </data>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="10dp">
+
+            <TextView
+                android:id="@+id/tvMovieName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:gravity="center"
+                android:text="@{viewModel.movie.title}"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <ImageView
+                android:id="@+id/imgPoster"
+                android:layout_width="200dp"
+                android:layout_height="300dp"
+                android:layout_below="@+id/tvMovieName"
+                android:layout_marginTop="10dp"
+                android:adjustViewBounds="true"
+
+                android:importantForAccessibility="no"
+                android:scaleType="fitCenter"
+                android:src="@drawable/close_movie_details"
+                app:posterImageUrl="@{viewModel.movie.posterPath}" />
+
+            <TextView
+                android:id="@+id/imgPosterLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/imgPoster"
+                android:text="@string/poster_image"
+                android:textSize="12sp"
+                android:textStyle="italic" />
+
+            <ImageView
+                android:id="@+id/imgBack"
+                android:layout_width="200dp"
+                android:layout_height="100dp"
+                android:layout_below="@+id/tvMovieName"
+                android:layout_marginTop="10dp"
+                android:layout_toEndOf="@+id/imgPoster"
+                android:adjustViewBounds="true"
+                android:importantForAccessibility="no"
+                android:scaleType="fitCenter"
+                android:src="@drawable/close_movie_details"
+                app:backdropImageUrl="@{viewModel.movie.backdropPath}" />
+
+            <TextView
+                android:id="@+id/imgBackLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/imgBack"
+                android:layout_marginStart="10dp"
+                android:layout_alignStart="@+id/imgBack"
+                android:text="@string/backdrop_image"
+                android:textSize="12sp"
+                android:textStyle="italic" />
+
+            <TextView
+                android:id="@+id/tvGenres"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/imgBackLabel"
+                android:layout_alignStart="@+id/imgBackLabel"
+                android:layout_toStartOf="@+id/tvOverView"
+                android:layout_marginTop="5dp"
+                android:gravity="center"
+                android:text="@{viewModel.getGenresString}"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvOverView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/tvMovieName"
+                android:layout_toEndOf="@+id/imgBack"
+                android:text="@{viewModel.movie.overview}"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/tvReleaseDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/tvGenres"
+                android:layout_toStartOf="@+id/tvOverView"
+                android:layout_alignStart="@+id/tvGenres"
+                android:layout_marginTop="5dp"
+                android:text="@{viewModel.getReleasedDate}"
+                android:textSize="15sp" />
+
+            <!--   <ImageView
+                   android:id="@+id/imgPoster"
+                   android:layout_width="wrap_content"
+                   android:layout_height="wrap_content"
+                   android:layout_below="@+id/tvMovieName"
+                   app:posterImageUrl="@{viewModel.movie.posterPath}" />
+       -->
+        </RelativeLayout>
+    </ScrollView>
+</layout>
