@@ -11,13 +11,15 @@ import com.arctouch.codechallenge.web.api.MovieRepository
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.functions.Consumer
+import io.reactivex.plugins.RxJavaPlugins
 import io.reactivex.schedulers.Schedulers
 import retrofit2.HttpException
 import java.io.IOException
 import java.net.UnknownHostException
 
 
-class MoviesViewModel(application: Application, private val movieRepository: MovieRepository) : AndroidViewModel(application), LifecycleObserver {
+class MoviesViewModel(application: Application, private val movieRepository: MovieRepository) : AndroidViewModel(application), LifecycleObserver, Consumer<Throwable> {
 
     private val compositeDisposable = CompositeDisposable()
 
@@ -28,6 +30,10 @@ class MoviesViewModel(application: Application, private val movieRepository: Mov
     private var isSearchingMode = false
     private var searchQuery: String? = null
     val communicationError = MutableLiveData<String>()
+
+    init {
+        RxJavaPlugins.setErrorHandler(this)
+    }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
     fun load() {
@@ -146,6 +152,12 @@ class MoviesViewModel(application: Application, private val movieRepository: Mov
         movieRepository.dispose()
         compositeDisposable.dispose()
         super.onCleared()
+    }
+
+    override fun accept(t: Throwable?) {
+        if (t != null) {
+            handleCommunicationError(t)
+        }
     }
 
 

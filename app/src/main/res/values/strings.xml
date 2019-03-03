@@ -11,4 +11,6 @@
     <string name="released_date">Lançamento:&#160;</string>
     <string name="poster_image">Poster image</string>
     <string name="backdrop_image">Backdrop image</string>
+    <string name="connection_off">Sem conexão</string>
+    <string name="connection_on">Estamos de volta</string>
 </resources>
