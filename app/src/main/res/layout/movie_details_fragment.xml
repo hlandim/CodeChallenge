@@ -47,7 +47,7 @@
                 <include
                     android:id="@+id/content_layout"
                     layout="@layout/details_content"
-                    app:viewModel="@{viewModel}"/>
+                    app:viewModel="@{viewModel}" />
 
             </RelativeLayout>
 
@@ -57,7 +57,7 @@
                 android:layout_height="wrap_content"
                 android:background="@drawable/close_movie_details"
                 app:layout_anchor="@+id/bodyContent"
-                app:layout_anchorGravity="center_horizontal|bottom" />
+                app:layout_anchorGravity="center_horizontal|right" />
 
         </android.support.design.widget.CoordinatorLayout>
 
