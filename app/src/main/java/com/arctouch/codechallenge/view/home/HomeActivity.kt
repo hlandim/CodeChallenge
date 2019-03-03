@@ -12,6 +12,7 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.SearchView
 import android.view.Menu
+import android.view.MenuItem
 import com.arctouch.codechallenge.R
 import com.arctouch.codechallenge.databinding.HomeActivityBinding
 import com.arctouch.codechallenge.model.Movie
@@ -34,8 +35,8 @@ class HomeActivity : AppCompatActivity(), HomeAdapter.ListListener, Consumer<Thr
 
     private val compositeDisposable = CompositeDisposable()
     private lateinit var binding: HomeActivityBinding
-    private var isLoading = false
     private lateinit var viewModel: MoviesViewModel
+    private var isLoading = false
 
     companion object {
         const val FRAGMENT_TAG = "details_fragment"
@@ -47,6 +48,12 @@ class HomeActivity : AppCompatActivity(), HomeAdapter.ListListener, Consumer<Thr
 
         RxJavaPlugins.setErrorHandler(this)
 
+        viewModel = createViewModel()
+        configureDataBinding()
+
+    }
+
+    private fun configureDataBinding() {
         binding = DataBindingUtil.setContentView(this, R.layout.home_activity)
         binding.lifecycleOwner = this
 
@@ -54,11 +61,9 @@ class HomeActivity : AppCompatActivity(), HomeAdapter.ListListener, Consumer<Thr
         adapter.listener = this
         binding.recyclerView.adapter = adapter
 
-
-        viewModel = createViewModel()
-
         this.lifecycle.addObserver(viewModel)
         binding.viewModel = viewModel
+
         binding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
@@ -76,8 +81,6 @@ class HomeActivity : AppCompatActivity(), HomeAdapter.ListListener, Consumer<Thr
                 }
             }
         })
-
-        handleIntent(intent)
     }
 
     override fun onNewIntent(intent: Intent?) {
@@ -101,11 +104,24 @@ class HomeActivity : AppCompatActivity(), HomeAdapter.ListListener, Consumer<Thr
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.options_menu, menu)
         val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
-        val searchView = menu.findItem(R.id.search).actionView as SearchView
+        val menuItem = menu.findItem(R.id.search)
+        val searchView = menuItem.actionView as SearchView
         searchView.apply {
             setSearchableInfo(searchManager.getSearchableInfo(componentName))
         }
-//        searchView.on { m }
+        menuItem.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
+            override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
+
+                return true
+            }
+
+            override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
+                viewModel.resetSearchVariables()
+                return true
+            }
+
+        })
+
         return true
     }
 

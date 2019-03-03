@@ -20,7 +20,6 @@ class MoviesViewModel(private val movieRepository: MovieRepository) : ViewModel(
     val isLoading: MutableLiveData<Boolean> = MutableLiveData<Boolean>().apply { value = false }
     val isEmptySearch: MutableLiveData<Boolean> = MutableLiveData<Boolean>().apply { value = false }
     private var countPage: Long = 0
-    private var countPageSearch: Long = 0
     private var isSearchingMode = false
     private var searchQuery: String? = null
     val communicationError = MutableLiveData<Throwable>()
@@ -82,14 +81,15 @@ class MoviesViewModel(private val movieRepository: MovieRepository) : ViewModel(
 
     fun searchMovie(query: String): Observable<UpcomingMoviesResponse> {
         if (query != searchQuery) {
-            countPageSearch = 0
+            countPage = 1
             movies.value?.clear()
+        } else if (searchQuery == null) {
+            countPage = 1
         }
-        countPageSearch++
         isLoading.value = true
         isSearchingMode = true
         searchQuery = query
-        val response = movieRepository.searchMovie(query, countPageSearch)
+        val response = movieRepository.searchMovie(query, countPage)
         val dispose = response.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
@@ -106,8 +106,10 @@ class MoviesViewModel(private val movieRepository: MovieRepository) : ViewModel(
     }
 
     fun resetSearchVariables() {
-        countPageSearch = 0
-        isSearchingMode = false
+        if (isSearchingMode) {
+            countPage = 0
+            isSearchingMode = false
+        }
         searchQuery = null
     }
 
