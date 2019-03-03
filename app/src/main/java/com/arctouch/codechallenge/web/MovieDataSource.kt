@@ -9,4 +9,6 @@ interface MovieDataSource {
     fun getGenres(): Observable<GenreResponse>
 
     fun upcomingMovies(page: Long): Observable<UpcomingMoviesResponse>
+
+    fun searchMovie(query: String, page: Long): Observable<UpcomingMoviesResponse>
 }

@@ -42,4 +42,13 @@ interface TmdbApi {
             @Query("page") page: Long,
             @Query("region") region: String = DEFAULT_REGION
     ): Observable<UpcomingMoviesResponse>
+
+    @GET("search/movie")
+    fun searchMovie(
+            @Query("api_key") apiKey: String = API_KEY,
+            @Query("query") query: String,
+            @Query("page") page: Long
+    ): Observable<UpcomingMoviesResponse>
+
+
 }

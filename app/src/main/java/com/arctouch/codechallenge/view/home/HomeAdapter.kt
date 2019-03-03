@@ -16,7 +16,7 @@ import kotlinx.android.synthetic.main.row_loading.view.*
 class HomeAdapter(private var movies: MutableList<Movie>) : RecyclerView.Adapter<HomeAdapter.CustomViewHolder>() {
 
     lateinit var listener: ListListener
-    private var isLoading = false
+    private var hideLoading = false
     private var countNewItems = movies.size
 
     companion object {
@@ -72,15 +72,24 @@ class HomeAdapter(private var movies: MutableList<Movie>) : RecyclerView.Adapter
             }
         } else {
             val footerHolder = holder as FooterHolder
-            if (!isLoading && countNewItems > 0) {
-                countNewItems = 0
-                isLoading = true
+            if (!hideLoading && movies.size > 0) {
                 footerHolder.itemView.pbLoadingNewMovies.visibility = View.VISIBLE
-            } else if (countNewItems <= 0) {
-                footerHolder.itemView.pbLoadingNewMovies.visibility = View.GONE
+            } else {
+                footerHolder.itemView.pbLoadingNewMovies.visibility = View.INVISIBLE
             }
         }
     }
+
+    fun hideLoading() {
+        hideLoading = true
+        notifyDataSetChanged()
+    }
+
+    fun showLoading() {
+        hideLoading = false
+        notifyDataSetChanged()
+    }
+
 
     override fun getItemCount(): Int {
         return movies.size + 1
@@ -92,13 +101,10 @@ class HomeAdapter(private var movies: MutableList<Movie>) : RecyclerView.Adapter
 
     interface ListListener {
         fun onRowClicked(movie: Movie)
-        fun onBottomReached()
-
     }
 
     fun replaceItems(movies: MutableList<Movie>) {
-        isLoading = false
-        countNewItems = movies.size - this.movies.size
+        countNewItems = movies.size
         this.movies = movies
         notifyDataSetChanged()
     }

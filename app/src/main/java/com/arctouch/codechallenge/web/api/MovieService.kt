@@ -15,4 +15,8 @@ class MovieService(private val api: TmdbApi) : MovieDataSource {
         return api.upcomingMovies(page = page)
     }
 
+    override fun searchMovie(query: String, page: Long): Observable<UpcomingMoviesResponse> {
+        return api.searchMovie(query = query, page = page)
+    }
+
 }

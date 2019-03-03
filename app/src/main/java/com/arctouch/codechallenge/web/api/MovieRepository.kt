@@ -41,6 +41,11 @@ class MovieRepository(private val dataSource: MovieDataSource) : MovieDataSource
         return dataSource.upcomingMovies(page)
     }
 
+    override fun searchMovie(query: String, page: Long): Observable<UpcomingMoviesResponse> {
+        return dataSource.searchMovie(query, page)
+    }
+
+
     fun dispose() {
         compositeDisposable.dispose()
     }

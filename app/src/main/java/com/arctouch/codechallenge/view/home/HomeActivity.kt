@@ -7,11 +7,11 @@ import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.design.widget.Snackbar
+import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.SearchView
 import android.view.Menu
-import android.widget.Toast
 import com.arctouch.codechallenge.R
 import com.arctouch.codechallenge.databinding.HomeActivityBinding
 import com.arctouch.codechallenge.model.Movie
@@ -22,14 +22,20 @@ import com.arctouch.codechallenge.web.api.MovieRepository
 import com.arctouch.codechallenge.web.api.MovieService
 import com.arctouch.codechallenge.web.api.TmdbApi
 import com.daimajia.androidanimations.library.YoYo
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.functions.Consumer
+import io.reactivex.plugins.RxJavaPlugins
+import io.reactivex.schedulers.Schedulers
 
 
-class HomeActivity : AppCompatActivity(), HomeAdapter.ListListener {
+class HomeActivity : AppCompatActivity(), HomeAdapter.ListListener, Consumer<Throwable> {
+
 
     private val compositeDisposable = CompositeDisposable()
     private lateinit var binding: HomeActivityBinding
     private var isLoading = false
+    private lateinit var viewModel: MoviesViewModel
 
     companion object {
         const val FRAGMENT_TAG = "details_fragment"
@@ -39,6 +45,7 @@ class HomeActivity : AppCompatActivity(), HomeAdapter.ListListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        RxJavaPlugins.setErrorHandler(this)
 
         binding = DataBindingUtil.setContentView(this, R.layout.home_activity)
         binding.lifecycleOwner = this
@@ -48,17 +55,23 @@ class HomeActivity : AppCompatActivity(), HomeAdapter.ListListener {
         binding.recyclerView.adapter = adapter
 
 
-        val viewModel = createViewModel()
+        viewModel = createViewModel()
 
         this.lifecycle.addObserver(viewModel)
         binding.viewModel = viewModel
         binding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
-
                 if (!recyclerView!!.canScrollVertically(1)
                         && !isLoading) {
-                    binding.viewModel!!.requestNextMoviePage()
+                    adapter.showLoading()
+                    val dispose = viewModel.requestNextPage().subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                            .subscribe {
+                                adapter.hideLoading()
+                            }
+
+                    compositeDisposable.add(dispose)
+
 
                 }
             }
@@ -78,19 +91,21 @@ class HomeActivity : AppCompatActivity(), HomeAdapter.ListListener {
 
         if (Intent.ACTION_SEARCH == intent.action) {
             val query = intent.getStringExtra(SearchManager.QUERY)
-            Toast.makeText(this, query, Toast.LENGTH_SHORT).show()
+//            Toast.makeText(this, query, Toast.LENGTH_SHORT).show()
+            viewModel.searchMovie(query)
             //use the query to search your data somehow
+
         }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.options_menu, menu)
-// Associate searchable configuration with the SearchView
         val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
-        (menu.findItem(R.id.search).actionView as SearchView).apply {
+        val searchView = menu.findItem(R.id.search).actionView as SearchView
+        searchView.apply {
             setSearchableInfo(searchManager.getSearchableInfo(componentName))
         }
-
+//        searchView.on { m }
         return true
     }
 
@@ -102,10 +117,6 @@ class HomeActivity : AppCompatActivity(), HomeAdapter.ListListener {
         val viewModel: MoviesViewModel by lazy {
             getViewModel { MoviesViewModel(movieRepository) }
         }
-
-        viewModel.communicationErro.observe(this, Observer { message ->
-            Snackbar.make(binding.rootLayout, message.toString(), Snackbar.LENGTH_LONG).show()
-        })
 
         viewModel.isLoading.observe(this, Observer { isModelViewLoading ->
             this.isLoading = isModelViewLoading!!
@@ -124,10 +135,6 @@ class HomeActivity : AppCompatActivity(), HomeAdapter.ListListener {
 
     }
 
-    override fun onBottomReached() {
-        binding.viewModel!!.requestNextMoviePage()
-    }
-
     override fun onBackPressed() {
         val fragment = supportFragmentManager.findFragmentByTag(FRAGMENT_TAG)
         if (fragment != null) {
@@ -140,5 +147,13 @@ class HomeActivity : AppCompatActivity(), HomeAdapter.ListListener {
     override fun onDestroy() {
         compositeDisposable.dispose()
         super.onDestroy()
+    }
+
+    override fun accept(t: Throwable) {
+        viewModel.communicationError.value = t
+        val finalMessage = getString(R.string.communication_error) + ": " + t.message
+        val snackBar = Snackbar.make(binding.rootLayout, finalMessage, Snackbar.LENGTH_LONG)
+        snackBar.setActionTextColor(ContextCompat.getColor(this, android.R.color.holo_red_light))
+        snackBar.show()
     }
 }

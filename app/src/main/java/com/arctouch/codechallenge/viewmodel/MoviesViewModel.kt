@@ -18,9 +18,12 @@ class MoviesViewModel(private val movieRepository: MovieRepository) : ViewModel(
 
     val movies: MutableLiveData<MutableList<Movie>> = MutableLiveData<MutableList<Movie>>().apply { value = mutableListOf() }
     val isLoading: MutableLiveData<Boolean> = MutableLiveData<Boolean>().apply { value = false }
-    var countPage: Long = 0
-    val communicationErro = MutableLiveData<String>()
-
+    val isEmptySearch: MutableLiveData<Boolean> = MutableLiveData<Boolean>().apply { value = false }
+    private var countPage: Long = 0
+    private var countPageSearch: Long = 0
+    private var isSearchingMode = false
+    private var searchQuery: String? = null
+    val communicationError = MutableLiveData<Throwable>()
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
     fun load() {
@@ -32,17 +35,27 @@ class MoviesViewModel(private val movieRepository: MovieRepository) : ViewModel(
                         requestNextMoviePage()
                     }, {
                         Log.w(Tags.COMMUNICATION_ERROR, it.message)
-                        communicationErro.value = it.message
+                        communicationError.value = it
                     })
 
             compositeDisposable.add(dispose)
         }
     }
 
-    fun requestNextMoviePage() {
-        countPage++
-        upcomingMovies(countPage)
+    fun requestNextPage(): Observable<UpcomingMoviesResponse> {
+        return if (isSearchingMode && searchQuery != null) {
+            requestNextSearchPage()
+        } else {
+            requestNextMoviePage()
+        }
     }
+
+    private fun requestNextMoviePage(): Observable<UpcomingMoviesResponse> {
+        countPage++
+        return upcomingMovies(countPage)
+    }
+
+    private fun getGenres() = movieRepository.getGenres()
 
     private fun upcomingMovies(page: Long): Observable<UpcomingMoviesResponse> {
 
@@ -51,26 +64,64 @@ class MoviesViewModel(private val movieRepository: MovieRepository) : ViewModel(
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    if (isLoading.value!!) {
-                        isLoading.value = false
-                    }
-                    val moviesWithGenres = it.results.map { movie ->
-                        movie.copy(genres = MovieRepository.genres.filter { movie.genreIds?.contains(it.id) == true })
-                    }
-                    val allMovies = movies.value!!.plus(moviesWithGenres).toMutableList()
-                    movies.postValue(allMovies)
+
+                    handleMovieResponse(it)
 
                 }, {
                     Log.w(Tags.COMMUNICATION_ERROR, it.message)
-                    communicationErro.value = it.message
+                    communicationError.value = it
                 })
         compositeDisposable.add(dispose)
 
         return response
     }
 
-    private fun getGenres() = movieRepository.getGenres()
+    private fun requestNextSearchPage(): Observable<UpcomingMoviesResponse> {
+        return searchMovie(searchQuery!!)
+    }
 
+    fun searchMovie(query: String): Observable<UpcomingMoviesResponse> {
+        if (query != searchQuery) {
+            countPageSearch = 0
+            movies.value?.clear()
+        }
+        countPageSearch++
+        isLoading.value = true
+        isSearchingMode = true
+        searchQuery = query
+        val response = movieRepository.searchMovie(query, countPageSearch)
+        val dispose = response.subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+
+                    handleMovieResponse(it)
+
+                }, {
+                    Log.w(Tags.COMMUNICATION_ERROR, it.message)
+                    communicationError.value = it
+                })
+        compositeDisposable.add(dispose)
+
+        return response
+    }
+
+    fun resetSearchVariables() {
+        countPageSearch = 0
+        isSearchingMode = false
+        searchQuery = null
+    }
+
+    private fun handleMovieResponse(response: UpcomingMoviesResponse) {
+        if (isLoading.value!!) {
+            isLoading.value = false
+        }
+        val moviesWithGenres = response.results.map { movie ->
+            movie.copy(genres = MovieRepository.genres.filter { movie.genreIds?.contains(it.id) == true })
+        }
+        val allMovies = movies.value!!.plus(moviesWithGenres).toMutableList()
+        isEmptySearch.value = allMovies.isEmpty()
+        movies.postValue(allMovies)
+    }
 
     override fun onCleared() {
         movieRepository.dispose()

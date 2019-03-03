@@ -3,4 +3,6 @@
     <string name="movie_and_genres">%s - %s</string>
     <string name="search_title">Archtouch</string>
     <string name="search_hint">Encontre um filme</string>
+    <string name="communication_error">Falha na comunicação com o servidor</string>
+    <string name="empty_response">Nenhum resultado encontrado</string>
 </resources>
