@@ -12,11 +12,11 @@ import com.arctouch.codechallenge.viewmodel.MovieDetailsViewModel
 import com.daimajia.androidanimations.library.Techniques
 import com.daimajia.androidanimations.library.YoYo
 import kotlinx.android.synthetic.main.movie_details_fragment.*
+import java.io.Serializable
 
 class MovieDetailsFragment : Fragment() {
 
     private lateinit var movie: Movie
-    var onFinishAnimationListener: YoYo.AnimatorCallback? = null
 
     companion object {
         fun newInstance(movie: Movie): MovieDetailsFragment {
@@ -61,13 +61,11 @@ class MovieDetailsFragment : Fragment() {
         if (isAdded && activity != null) {
             YoYo.with(Techniques.SlideOutDown).onEnd {
                 content.visibility = View.INVISIBLE
-                YoYo.with(Techniques.FadeOut).onEnd { animator ->
+                YoYo.with(Techniques.FadeOut).onEnd {
                     overlay.visibility = View.INVISIBLE
-                    onFinishAnimationListener?.call(animator)
+                    activity!!.supportFragmentManager.beginTransaction().remove(this).commit()
                 }.duration(200).playOn(overlay)
             }.duration(200).playOn(content)
-        } else {
-            onFinishAnimationListener?.call(null)
         }
     }
 

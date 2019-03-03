@@ -22,7 +22,6 @@ import com.arctouch.codechallenge.viewmodel.MoviesViewModel
 import com.arctouch.codechallenge.web.api.MovieRepository
 import com.arctouch.codechallenge.web.api.MovieService
 import com.arctouch.codechallenge.web.api.TmdbApi
-import com.daimajia.androidanimations.library.YoYo
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.Consumer
@@ -72,7 +71,7 @@ class HomeActivity : AppCompatActivity(), HomeAdapter.ListListener, Consumer<Thr
                 super.onScrolled(recyclerView, dx, dy)
                 if (!recyclerView!!.canScrollVertically(1)
                         && !isLoading) {
-                    adapter.showLoading()
+                    binding.recyclerView.post { adapter.showLoading() }
                     val dispose = viewModel.requestNextPage().subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                             .subscribe {
                                 adapter.hideLoading()
@@ -146,10 +145,7 @@ class HomeActivity : AppCompatActivity(), HomeAdapter.ListListener, Consumer<Thr
 
     override fun onRowClicked(movie: Movie) {
         val detailsFragment = MovieDetailsFragment.newInstance(movie)
-        detailsFragment.onFinishAnimationListener = YoYo.AnimatorCallback {
-            val fragment = supportFragmentManager.findFragmentByTag(FRAGMENT_TAG)
-            supportFragmentManager.beginTransaction().remove(fragment).addToBackStack(null).commit()
-        }
+
         supportFragmentManager.beginTransaction().replace(R.id.fragment_details, detailsFragment, FRAGMENT_TAG).commit()
 
     }

@@ -8,7 +8,7 @@
     <string name="unknown_error">Erro desconhecido</string>
     <string name="invalid_parameters_error">Erro ao enviar a requisição, verifique os parâmetros enviados</string>
     <string name="empty_response">Nenhum resultado encontrado</string>
-    <string name="released_date">Data de lançamento:&#160;</string>
+    <string name="released_date">Lançamento:&#160;</string>
     <string name="poster_image">Poster image</string>
     <string name="backdrop_image">Backdrop image</string>
 </resources>
