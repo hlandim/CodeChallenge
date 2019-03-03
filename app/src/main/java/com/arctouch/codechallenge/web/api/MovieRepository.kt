@@ -13,24 +13,15 @@ import io.reactivex.schedulers.Schedulers
 
 class MovieRepository(private val dataSource: MovieDataSource) : MovieDataSource {
 
-    companion object {
-        var genres = listOf<Genre>()
-    }
-
-
     var compositeDisposable = CompositeDisposable()
 
-    private fun cacheGenres(genres: List<Genre>) {
-        MovieRepository.genres = genres
-    }
 
     override fun getGenres(): Observable<GenreResponse> {
         val response = dataSource.getGenres()
         val disposable = response.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
-                    Log.d("TESTE", "3")
-                    cacheGenres(it.genres)
+                    //TODO Save in databese
                 }
         compositeDisposable.add(disposable)
 

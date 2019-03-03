@@ -4,9 +4,12 @@ import android.app.Application
 import android.arch.lifecycle.*
 import android.util.Log
 import com.arctouch.codechallenge.R
+import com.arctouch.codechallenge.model.Genre
 import com.arctouch.codechallenge.model.Movie
 import com.arctouch.codechallenge.model.UpcomingMoviesResponse
 import com.arctouch.codechallenge.util.Tags
+import com.arctouch.codechallenge.util.androidThread
+import com.arctouch.codechallenge.util.ioThread
 import com.arctouch.codechallenge.web.api.MovieRepository
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -17,31 +20,37 @@ import io.reactivex.schedulers.Schedulers
 import retrofit2.HttpException
 import java.io.IOException
 import java.net.UnknownHostException
+import java.util.*
 
 
 class MoviesViewModel(application: Application, private val movieRepository: MovieRepository) : AndroidViewModel(application), LifecycleObserver, Consumer<Throwable> {
 
     private val compositeDisposable = CompositeDisposable()
 
-    val movies: MutableLiveData<MutableList<Movie>> = MutableLiveData<MutableList<Movie>>().apply { value = mutableListOf() }
-    val isLoading: MutableLiveData<Boolean> = MutableLiveData<Boolean>().apply { value = false }
-    val isEmptySearch: MutableLiveData<Boolean> = MutableLiveData<Boolean>().apply { value = false }
+    val movies: MutableLiveData<MutableList<Movie>> = MutableLiveData()
+    val isLoading: MutableLiveData<Boolean> = MutableLiveData()
+    val isEmptySearch: MutableLiveData<Boolean> = MutableLiveData()
     private var countPage: Long = 0
     private var isSearchingMode = false
     private var searchQuery: String? = null
     val communicationError = MutableLiveData<String>()
+    private var genres = listOf<Genre>()
 
     init {
         RxJavaPlugins.setErrorHandler(this)
+        movies.value = ArrayList()
+        isLoading.value = false
+        isEmptySearch.value = false
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
     fun load() {
         if (movies.value!!.isEmpty()) {
             isLoading.value = true
-            val dispose = getGenres().subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
+            val dispose = getGenres().subscribeOn(ioThread())
+                    .observeOn(androidThread())
                     .subscribe({
+                        genres = it.genres
                         requestNextMoviePage()
                     }, {
                         Log.w(Tags.COMMUNICATION_ERROR, it.message)
@@ -66,14 +75,14 @@ class MoviesViewModel(application: Application, private val movieRepository: Mov
         return upcomingMovies(countPage)
     }
 
-    private fun getGenres() = movieRepository.getGenres()
+    fun getGenres() = movieRepository.getGenres()
 
-    private fun upcomingMovies(page: Long): Observable<UpcomingMoviesResponse> {
+    fun upcomingMovies(page: Long): Observable<UpcomingMoviesResponse> {
 
         val response = movieRepository.upcomingMovies(page)
         val dispose = response
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(ioThread())
+                .observeOn(androidThread())
                 .subscribe({
 
                     handleMovieResponse(it)
@@ -102,8 +111,8 @@ class MoviesViewModel(application: Application, private val movieRepository: Mov
         isSearchingMode = true
         searchQuery = query
         val response = movieRepository.searchMovie(query, countPage)
-        val dispose = response.subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
+        val dispose = response.subscribeOn(ioThread())
+                .observeOn(androidThread())
                 .subscribe({
 
                     handleMovieResponse(it)
@@ -130,7 +139,7 @@ class MoviesViewModel(application: Application, private val movieRepository: Mov
             isLoading.value = false
         }
         val moviesWithGenres = response.results.map { movie ->
-            movie.copy(genres = MovieRepository.genres.filter { movie.genreIds?.contains(it.id) == true })
+            movie.copy(genres = genres.filter { movie.genreIds?.contains(it.id) == true })
         }
         val allMovies = movies.value!!.plus(moviesWithGenres).toMutableList()
         isEmptySearch.value = allMovies.isEmpty()
